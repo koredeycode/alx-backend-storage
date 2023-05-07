@@ -1,4 +1,4 @@
- -- create trigger
+-- create trigger
 
 DROP TRIGGER IF EXISTS purchase;
 DELIMITER $$
