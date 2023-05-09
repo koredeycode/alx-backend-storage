@@ -3,6 +3,7 @@
 Contains the list_all function
 """
 
+
 def list_all(mongo_collection):
     """
     List all the documents in a collection
