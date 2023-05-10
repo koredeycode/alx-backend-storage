@@ -4,7 +4,7 @@ Module documentation
 """
 
 import redis
-from typing import Union
+from typing import Union, Callable
 import uuid
 
 
@@ -26,3 +26,23 @@ class Cache:
         key: str = str(uuid.uuid4())
         self._redis.set(key, data)
         return key
+
+    def get(self, key, fn: Callable = None) -> Union[str, bytes, int, float]:
+        """
+        the get methon that take a key string argument
+        return the converted data
+        """
+        data = self._redis.get(key)
+        return fn(data) if fn is not None else data
+
+    def get_str(self, key: str) -> str:
+        """
+        return a string value from redis
+        """
+        return self.get(key, lambda x: x.decode("utf-8"))
+
+    def get_int(self, key: str) -> int:
+        """
+        return an integer from redis data
+        """
+        return self.get(key, int)
