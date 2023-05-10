@@ -3,9 +3,25 @@
 Module documentation
 """
 
+from functools import wraps
 import redis
-from typing import Union, Callable
+from typing import Union, Callable, Any
 import uuid
+
+
+def count_calls(method: Callable) -> Callable:
+    """
+    the count decorator
+    """
+    @wraps(method)
+    def wrapper(self, *args, **kwargs) -> Any:
+        """
+        do something cool
+        """
+        if isinstance(self._redis, redis.Redis):
+            self._redis.incr(method.__qualname__)
+        return method(self, *args, **kwargs)
+    return wrapper
 
 
 class Cache:
@@ -19,6 +35,7 @@ class Cache:
         self._redis = redis.Redis()
         self._redis.flushdb(True)
 
+    @count_calls
     def store(self, data: Union[str, bytes, int, float]) -> str:
         """
         generate an random kee and store input data in redis
