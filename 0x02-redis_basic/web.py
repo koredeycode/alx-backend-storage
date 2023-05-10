@@ -11,7 +11,7 @@ from typing import Callable
 r = redis.Redis()
 
 
-def cache_url(fn: Callable) -> Callable:
+def cache_url(method: Callable) -> Callable:
     """cache a url to 10 seconds"""
     @wraps(method)
     def wrapper(url) -> str:
