@@ -44,6 +44,34 @@ def call_history(method: Callable) -> Callable:
     return wrapper
 
 
+def f(inp: bytes) -> str:
+    """Helper function: convert bytes to str"""
+    return inp.decode("utf-8")
+
+
+def replay(fn: Callable) -> None:
+    """
+    display the history of calls of particular function
+    """
+    if fn is None or not hasattr(fn, '__self__'):
+        return
+    redis_store = getattr(fn.__self__, '_redis', None)
+    if not isinstance(redis_store, redis.Redis):
+        return
+    fn_name = fn.__qualname__
+    in_key = "{}:inputs".format(fn_name)
+    out_key = "{}:outputs".format(fn_name)
+    fn_call_count = 0
+    if redis_store.exists(fn_name) != 0:
+        fn_call_count = int(redis_store.get(fn_name))
+
+    print("{} was called {} times:".format(fn_name, fn_call_count))
+    fn_inputs = redis_store.lrange(in_key, 0, -1)
+    fn_outputs = redis_store.lrange(out_key, 0, -1)
+    for fn_input, fn_output in zip(fn_inputs, fn_outputs):
+        print("{}(*{}) -> {}".format(fn_name, f(fn_input), f(fn_output)))
+
+
 class Cache:
     """
     The cache class
