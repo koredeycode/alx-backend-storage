@@ -19,7 +19,7 @@ def cache_url(fn: Callable) -> Callable:
         r.incr("count:{}".format(url))
         res = r.get("result:{}".format(url))
         if res:
-            return result.decode('utf-8')
+            return res.decode('utf-8')
         res = method(url)
         r.set("count:{}".format(url), 0)
         r.setex("result:{}".format(url), 10, res)
