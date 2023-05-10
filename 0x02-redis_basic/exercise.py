@@ -24,6 +24,26 @@ def count_calls(method: Callable) -> Callable:
     return wrapper
 
 
+def call_history(method: Callable) -> Callable:
+    """
+    the call decorator
+    """
+    @wraps(method)
+    def wrapper(self, *args, **kwargs) -> Any:
+        """
+        the invoke function
+        """
+        in_key = "{}:inputs".format(method.__qualname__)
+        out_key = "{}:outputs".format(method.__qualname__)
+        if isinstance(self._redis, redis.Redis):
+            self._redis.rpush(in_key, str(args))
+        ret = method(self, *args, **kwargs)
+        if isinstance(self._redis, redis.Redis):
+            self._redis.rpush(out_key, ret)
+        return ret
+    return wrapper
+
+
 class Cache:
     """
     The cache class
@@ -36,6 +56,7 @@ class Cache:
         self._redis.flushdb(True)
 
     @count_calls
+    @call_history
     def store(self, data: Union[str, bytes, int, float]) -> str:
         """
         generate an random kee and store input data in redis
