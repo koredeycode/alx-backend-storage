@@ -1,39 +1,38 @@
 #!/usr/bin/env python3
-"""
-Module documentation
-"""
-
-from functools import wraps
-import requests
+'''A module with tools for request caching and tracking.
+'''
 import redis
+import requests
+from functools import wraps
 from typing import Callable
 
-r = redis.Redis()
+
+redis_store = redis.Redis()
+'''The module-level Redis instance.
+'''
 
 
-def cache_url(method: Callable) -> Callable:
-    """cache a url to 10 seconds"""
+def data_cacher(method: Callable) -> Callable:
+    '''Caches the output of fetched data.
+    '''
     @wraps(method)
-    def wrapper(url) -> str:
-        """the invoking function"""
-        r.incr("count:{}".format(url))
-        res = r.get("result:{}".format(url))
-        if res:
-            return res.decode("utf-8")
-        res = method(url)
-        r.set("count:{}".format(url), 0)
-        r.setex("result:{}".format(url), 10, res)
-        return res
-    return wrapper
+    def invoker(url) -> str:
+        '''The wrapper function for caching the output.
+        '''
+        redis_store.incr(f'count:{url}')
+        result = redis_store.get(f'result:{url}')
+        if result:
+            return result.decode('utf-8')
+        result = method(url)
+        redis_store.set(f'count:{url}', 0)
+        redis_store.setex(f'result:{url}', 10, result)
+        return result
+    return invoker
 
 
-@cache_url
+@data_cacher
 def get_page(url: str) -> str:
-    """
-    obtain the html content of a particular url and return it.
-    """
-    res = requests.get(url)
-    return res.text
-
-if __name__ == "__main__":
-    get_page('http://slowwly.robertomurray.co.uk')
+    '''Returns the content of a URL after caching the request's response,
+    and tracking the request.
+    '''
+    return requests.get(url).text
