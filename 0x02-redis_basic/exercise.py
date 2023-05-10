@@ -4,7 +4,7 @@ Module documentation
 """
 
 import redis
-import typing
+from typing import Union
 import uuid
 
 
@@ -17,8 +17,9 @@ class Cache:
         The initializing instance
         """
         self._redis = redis.Redis()
+        self._redis.flushdb(True)
 
-    def store(self, data: typing.Any) -> str:
+    def store(self, data: Union[str, bytes, int, float]) -> str:
         """
         generate an random kee and store input data in redis
         """
