@@ -34,4 +34,4 @@ def get_page(url: str) -> str:
     obtain the html content of a particular url and return it.
     """
     res = requests.get(url)
-    return res.content
+    return res.text
